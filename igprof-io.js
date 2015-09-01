@@ -172,7 +172,7 @@ app.get(/\/profile\/(.*)/, function(req, res) {
 });
 
 app.get("/", function(req, res) {
-  res.sendFile("/usr/src/igprof-navigator/index.html");
+  res.sendFile("/usr/src/igprof-io/index.html");
 });
 
 app.get("/health", function(req, res) {
@@ -181,11 +181,11 @@ app.get("/health", function(req, res) {
 });
 
 app.get(/.*\/main.js/, function(req, res) {
-  res.sendFile("/usr/src/igprof-navigator/main.js");
+  res.sendFile("/usr/src/igprof-io/main.js");
 });
 
 app.get(/.*\/reactable.js/, function(req, res) {
-  res.sendFile("/usr/src/igprof-navigator/reactable.js");
+  res.sendFile("/usr/src/igprof-io/reactable.js");
 });
 
 // Put a friendly message on the terminal
