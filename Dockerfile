@@ -9,4 +9,4 @@ EXPOSE 8888
 RUN mkdir -p /usr/src && git clone https://github.com/igprof/igprof-io /usr/src/igprof-io
 
 WORKDIR /usr/src/igprof-io
-ENTRYPOINT ${DEBUG:+supervisor} ${DEBUG:-node} igprof-navigator.js
+ENTRYPOINT ${DEBUG:+supervisor} ${DEBUG:-node} igprof-io.js
