@@ -175,6 +175,11 @@ app.get("/", function(req, res) {
   res.sendFile("/usr/src/igprof-navigator/index.html");
 });
 
+app.get("/health", function(req, res) {
+  res.status(200);
+  res.send("");
+});
+
 app.get(/.*\/main.js/, function(req, res) {
   res.sendFile("/usr/src/igprof-navigator/main.js");
 });

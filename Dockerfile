@@ -6,4 +6,6 @@ RUN npm install express
 RUN npm install sqlite3
 EXPOSE 8888
 
-ENTRYPOINT supervisor igprof-navigator.js
+RUN mkdir -p /usr/src && git clone https://github.com/igprof/igprof-io /usr/src
+
+ENTRYPOINT ${DEBUG:+supervisor} ${DEBUG:-node} igprof-navigator.js
