@@ -29,6 +29,11 @@ var FileSelector = React.createClass({
     for (var i = 0; i < dataRows.length; ++i) {
       rows[i] = {profile: <a href={dataRows[i].url}>{dataRows[i].filename}</a>};
     }
+    if (!rows.length)
+      return (
+      <div><h2>No profiles found in store. Please produce some more.</h2></div>
+      );
+      
     return (
     <Table className="table table-striped" data={rows} />
     );
