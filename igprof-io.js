@@ -2,6 +2,9 @@ var http = require('http');
 var chokidar = require('chokidar');
 var express = require('express');
 var sqlite3 = require('sqlite3');
+var redis = require('redis');
+
+var redis_client = redis.createClient(process.env.IGPROF_IO_REDIS);
 
 var app = express();
 
@@ -11,6 +14,17 @@ var watcher = chokidar.watch('/data/**/*.sql', {
 });
 
 var log = console.log.bind(console);
+
+ 
+if (redis_client) {
+  redis_client.on("error", function (err) {
+      console.log("Error " + err);
+  });
+
+  redis_client.on("ready", function (err) {
+    log("Pushing metadata to redis:" + process.env.IGPROF_IO_REDIS);
+  });
+}
 
 var GLOBAL_CONTEXT = {
   available_sqlite: {}
@@ -27,7 +41,21 @@ watcher
   .on('add', function(path) { 
       var id = path.replace(drop_path_re, "");
       context(function (ctx) {ctx.available_sqlite[id] = path});
-log('File', id, 'has been added'); })
+      log('File', id, 'has been added');
+      var db = new sqlite3.Database(path, sqlite3.OPEN_READONLY);
+      var stmt = db.prepare(SUMMARY_QUERY);
+      var result = db.all(SUMMARY_QUERY, {},
+        function(err, rows){
+          if (err)
+          {
+            log(err);
+            return;
+          }
+          if (redis_client)
+            redis_client.rpush("igprof_files", JSON.stringify({"filename": id, "info": rows[0]}));
+        }
+      );
+   })
   .on('addDir', function(path) { log('Directory', path, 'has been added'); })
   .on('change', function(path) { log('File', path, 'has been changed'); })
   .on('unlink', function(path) { 
@@ -124,6 +152,8 @@ var CHILDREN_QUERY = "SELECT c.self_id, sym.name,"                             +
                      " INNER JOIN symbols sym ON sym.id IN (myself.symbol_id)" +
                      " WHERE c.parent_id = $rank"                              +
                      " ORDER BY c.from_parent_count DESC;"                     
+
+var SUMMARY_QUERY = "SELECT * from summary;"
 
 app.get(/\/profile\/(.*)\/self/, function(req, res) {
   var id = req.params[0];
