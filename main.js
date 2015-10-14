@@ -57,12 +57,19 @@ var CumulativeView = React.createClass({
       if (!this.isMounted())
         return;
       var rows = [];
+      var counts_name = "Bytes";
+      var hasCalls = true;
+      if (this.props.counter == "PERF_TICKS")
+      {
+        counts_name = "Seconds";
+        hasCalls = false;
+      }
       for (var i = 0; i < result.length; ++i) {
         url = "#/file/" + this.props.params.splat + "/rank/" + result[i].id;
-        rows[i] = {"Symbol name": <a href={url}>{result[i].name}</a>,
-                   Counts: result[i].cumulative_count,
-                   Calls: result[i].total_calls,
-        };
+        rows[i] = {"Symbol name": <a href={url}>{result[i].name}</a>};
+        rows[i][counts_name] = result[i].cumulative_count * this.props.period;
+        if(hasCalls)
+          rows[i]["Calls"] = result[i].total_calls;
       }
       this.setState({
           main_rows: rows,
@@ -92,12 +99,19 @@ var SelfView = React.createClass({
       if (!this.isMounted())
         return;
       var rows = [];
+      var counts_name = "Bytes";
+      var hasCalls = true;
+      if (this.props.counter == "PERF_TICKS")
+      {
+        counts_name = "Seconds";
+        hasCalls = false;
+      }
       for (var i = 0; i < result.length; ++i) {
         url = "#/file/" + this.props.params.splat + "/rank/" + result[i].id;
-        rows[i] = {"Symbol name": <a href={url}>{result[i].name}</a>,
-                   ticks: result[i].self_count,
-                   calls: result[i].self_calls,
-        };
+        rows[i] = {"Symbol name": <a href={url}>{result[i].name}</a>};
+        rows[i][counts_name] = result[i].self_count * this.props.period;
+        if(hasCalls)
+          rows[i]["Calls"] = result[i].self_calls;
       }
       this.setState({
           main_rows: rows,
@@ -287,9 +301,10 @@ var FileView = React.createClass({
     $.get("profile/" + props.params.splat,  function(result) {
       if (!this.isMounted())
         return;
+      console.log(result);
       this.setState({
         filename: props.params.splat,
-        period: result.period || 1,
+        period: result.tick_period || 1,
         counter: result.counter,
         counts: result.total_count,
         calls: result.total_freqs
@@ -307,7 +322,7 @@ var FileView = React.createClass({
       <div class="container">
         File: {this.props.params.splat} - Counter: {this.state.counter}<br/>
         <a href="#/">Back to file directory.</a>
-        <RouteHandler/>
+        <RouteHandler counter={this.state.counter} period={this.state.period}/>
       </div>
     );
   }
