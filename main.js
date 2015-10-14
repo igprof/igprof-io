@@ -23,7 +23,7 @@ var FileSelector = React.createClass({
     var dataRows = [];
     var rows = [];
     for (var i in this.state.files) {
-      dataRows[i] = {url: "#/" + this.state.files[i] + "/cumulative",
+      dataRows[i] = {url: "#/file/" + this.state.files[i] + "/cumulative",
                  filename: this.state.files[i] };
     }
     for (var i = 0; i < dataRows.length; ++i) {
@@ -58,7 +58,7 @@ var CumulativeView = React.createClass({
         return;
       var rows = [];
       for (var i = 0; i < result.length; ++i) {
-        url = "#/" + this.props.params.splat + "/rank/" + result[i].id;
+        url = "#/file/" + this.props.params.splat + "/rank/" + result[i].id;
         rows[i] = {"Symbol name": <a href={url}>{result[i].name}</a>,
                    Counts: result[i].cumulative_count,
                    Calls: result[i].total_calls,
@@ -70,11 +70,9 @@ var CumulativeView = React.createClass({
     }.bind(this));
   },
   render: function() {
-    var self_url = "#/" + this.props.params.splat + "/self";
+    var self_url = "#/file/" + this.props.params.splat + "/self";
     return (
       <div>
-        File: {this.props.params.splat}<br/> 
-        <a href="#/">Back to file directory.</a>
         <div><a href={self_url}>Switch to self view.</a></div>
         <Table className="table table-condensed" data={this.state.main_rows} />
       </div>
@@ -95,7 +93,7 @@ var SelfView = React.createClass({
         return;
       var rows = [];
       for (var i = 0; i < result.length; ++i) {
-        url = "#/" + this.props.params.splat + "/rank/" + result[i].id;
+        url = "#/file/" + this.props.params.splat + "/rank/" + result[i].id;
         rows[i] = {"Symbol name": <a href={url}>{result[i].name}</a>,
                    ticks: result[i].self_count,
                    calls: result[i].self_calls,
@@ -107,11 +105,9 @@ var SelfView = React.createClass({
     }.bind(this));
   },
   render: function() {
-    var cumulative_url = "#/" + this.props.params.splat + "/cumulative"
+    var cumulative_url = "#/file/" + this.props.params.splat + "/cumulative"
     return (
       <div>
-        File: {this.props.params.splat}<br/>
-        <a href="#/">Back to file directory.</a>
         <div><a href={cumulative_url}>Switch to cumulative view.</a></div>
         <Table className="table table-condensed" data={this.state.main_rows} />
       </div>
@@ -132,7 +128,7 @@ var ParentsView = React.createClass({
       var rows = [];
       for (var i = 0; i < result.length; ++i) {
         var r = result[i];
-        url = "#/" + props.file + "/rank/" + result[i].self_id;
+        url = "#/file/" + props.file + "/rank/" + result[i].self_id;
         rows[i] = {Callers: <a href={url}>{r.name}</a>,
                    "%": r.pct,
                    Counts: <span>{r.to_child_count} / {r.cumulative_count}</span>,
@@ -171,7 +167,7 @@ var ChildrenView = React.createClass({
       var rows = [];
       for (var i = 0; i < result.length; ++i) {
         var r = result[i];
-        url = "#/" + props.file + "/rank/" + r.self_id;
+        url = "#/file/" + props.file + "/rank/" + r.self_id;
         rows[i] = {Children: <a href={url}>{r.name}</a>,
                    "%": r.pct,
                    Counts: <span>{r.from_parent_count} / {r.cumulative_count}</span>,
@@ -252,11 +248,10 @@ var RankView = React.createClass({
     });
   },
   render: function() {
-    var cumulative_url = "#/" + this.props.params.splat + "/cumulative"
+    var cumulative_url = "#/file/" + this.props.params.splat + "/cumulative"
     return (
       <div>
         <div>
-          File: {this.props.params.splat}<br/>
           <a href={cumulative_url}>Back to cumulative view.</a>
           <ParentsView rank={this.props.params.rank} file={this.props.params.splat} />
           <MainView rank={this.props.params.rank} file={this.props.params.splat} />
@@ -278,13 +273,26 @@ var App = React.createClass({
   }
 });
 
+var FileView = React.createClass({
+  render: function() {
+    return (
+      <div class="container">
+        File: {this.props.params.splat}<br/> 
+        <a href="#/">Back to file directory.</a>
+        <RouteHandler/>
+      </div>
+    );
+  }
+});
 
 var routes = (
   <Route handler={App}>
     <Route handler={FileSelector} path="/"/>
-    <Route handler={CumulativeView} path="*/cumulative"/>
-    <Route handler={SelfView} path="*/self"/>
-    <Route handler={RankView} path="*/rank/:rank"/>
+    <Route handler={FileView} path="/file">
+      <Route handler={CumulativeView} path="*/cumulative"/>
+      <Route handler={SelfView} path="*/self"/>
+      <Route handler={RankView} path="*/rank/:rank"/>
+    </Route>
     <Route handler={NotFound} path="*"/>
   </Route>
 );
