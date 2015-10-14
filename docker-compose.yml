@@ -1,0 +1,22 @@
+igprof:
+  build: .
+  links:
+  - redis
+  environment:
+    IGPROF_IO_REDIS: "redis://redis:6379"
+  volumes:
+  - "./data:/data"
+  - ".:/usr/src/igprof-io"
+  ports:
+  - 8888:8888
+redis:
+  image: redis
+  expose: 
+  - 6379
+logstash:
+  image: logstash
+  links:
+  - redis
+  volumes:
+  - "./logstash.conf:/logstash.conf"
+  command: "logstash -f /logstash.conf"
