@@ -212,9 +212,9 @@ var MainView = React.createClass({
 
         rows[i] = {Symbol: r.name,
                    "%": r.pct,
-                   Counts: <span>{r.cumulative_count} / {r.self_count}</span>,
-                   Calls: <span>{r.total_calls} / {r.self_calls}</span>,
-                   Paths: <span>{r.total_paths} / {r.self_paths}</span>,
+                   Counts: <span>{r.self_count} / {r.cumulative_count}</span>,
+                   Calls: <span>{r.self_calls} / {r.total_calls}</span>,
+                   Paths: <span>{r.self_paths} / {r.total_paths}</span>,
         };
       }
       this.setState({
