@@ -274,10 +274,38 @@ var App = React.createClass({
 });
 
 var FileView = React.createClass({
+  getInitialState: function() {
+      return {
+        filename: [],
+        period: 1,
+        counter: "UNKNOWN",
+        counts: 0,
+        calls: 0,
+      };
+  },
+  refetchData: function(props) {
+    $.get("profile/" + props.params.splat,  function(result) {
+      if (!this.isMounted())
+        return;
+      this.setState({
+        filename: props.params.splat,
+        period: result.period || 1,
+        counter: result.counter,
+        counts: result.total_count,
+        calls: result.total_freqs
+      });
+    }.bind(this));
+  },
+  componentWillReceiveProps: function(nextProps) {
+    this.refetchData(nextProps);
+  },
+  componentDidMount: function() {
+    this.refetchData(this.props);
+  },
   render: function() {
     return (
       <div class="container">
-        File: {this.props.params.splat}<br/> 
+        File: {this.props.params.splat} - Counter: {this.state.counter}<br/>
         <a href="#/">Back to file directory.</a>
         <RouteHandler/>
       </div>
