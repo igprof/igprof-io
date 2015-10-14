@@ -73,7 +73,8 @@ var CumulativeView = React.createClass({
     var self_url = "#/" + this.props.params.splat + "/self";
     return (
       <div>
-        File: {this.props.params.splat} <a href="#/">Back to file directory.</a>
+        File: {this.props.params.splat}<br/> 
+        <a href="#/">Back to file directory.</a>
         <div><a href={self_url}>Switch to self view.</a></div>
         <Table className="table table-condensed" data={this.state.main_rows} />
       </div>
@@ -109,7 +110,8 @@ var SelfView = React.createClass({
     var cumulative_url = "#/" + this.props.params.splat + "/cumulative"
     return (
       <div>
-        File: {this.props.params.splat} <a href="#/">Back to file directory.</a>
+        File: {this.props.params.splat}<br/>
+        <a href="#/">Back to file directory.</a>
         <div><a href={cumulative_url}>Switch to cumulative view.</a></div>
         <Table className="table table-condensed" data={this.state.main_rows} />
       </div>
@@ -254,6 +256,7 @@ var RankView = React.createClass({
     return (
       <div>
         <div>
+          File: {this.props.params.splat}<br/>
           <a href={cumulative_url}>Back to cumulative view.</a>
           <ParentsView rank={this.props.params.rank} file={this.props.params.splat} />
           <MainView rank={this.props.params.rank} file={this.props.params.splat} />
