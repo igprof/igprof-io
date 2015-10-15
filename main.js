@@ -23,7 +23,7 @@ var FileSelector = React.createClass({
     var dataRows = [];
     var rows = [];
     for (var i in this.state.files) {
-      dataRows[i] = {url: "#/" + this.state.files[i] + "/cumulative",
+      dataRows[i] = {url: "#/file/" + this.state.files[i] + "/cumulative",
                  filename: this.state.files[i] };
     }
     for (var i = 0; i < dataRows.length; ++i) {
@@ -57,12 +57,19 @@ var CumulativeView = React.createClass({
       if (!this.isMounted())
         return;
       var rows = [];
+      var counts_name = "Bytes";
+      var hasCalls = true;
+      if (this.props.counter == "PERF_TICKS")
+      {
+        counts_name = "Seconds";
+        hasCalls = false;
+      }
       for (var i = 0; i < result.length; ++i) {
-        url = "#/" + this.props.params.splat + "/rank/" + result[i].id;
-        rows[i] = {"Symbol name": <a href={url}>{result[i].name}</a>,
-                   Counts: result[i].cumulative_count,
-                   Calls: result[i].total_calls,
-        };
+        url = "#/file/" + this.props.params.splat + "/rank/" + result[i].id;
+        rows[i] = {"Symbol name": <a href={url}>{result[i].name}</a>};
+        rows[i][counts_name] = result[i].cumulative_count * this.props.period;
+        if(hasCalls)
+          rows[i]["Calls"] = result[i].total_calls;
       }
       this.setState({
           main_rows: rows,
@@ -70,10 +77,9 @@ var CumulativeView = React.createClass({
     }.bind(this));
   },
   render: function() {
-    var self_url = "#/" + this.props.params.splat + "/self";
+    var self_url = "#/file/" + this.props.params.splat + "/self";
     return (
       <div>
-        File: {this.props.params.splat} <a href="#/">Back to file directory.</a>
         <div><a href={self_url}>Switch to self view.</a></div>
         <Table className="table table-condensed" data={this.state.main_rows} />
       </div>
@@ -93,12 +99,19 @@ var SelfView = React.createClass({
       if (!this.isMounted())
         return;
       var rows = [];
+      var counts_name = "Bytes";
+      var hasCalls = true;
+      if (this.props.counter == "PERF_TICKS")
+      {
+        counts_name = "Seconds";
+        hasCalls = false;
+      }
       for (var i = 0; i < result.length; ++i) {
-        url = "#/" + this.props.params.splat + "/rank/" + result[i].id;
-        rows[i] = {"Symbol name": <a href={url}>{result[i].name}</a>,
-                   ticks: result[i].self_count,
-                   calls: result[i].self_calls,
-        };
+        url = "#/file/" + this.props.params.splat + "/rank/" + result[i].id;
+        rows[i] = {"Symbol name": <a href={url}>{result[i].name}</a>};
+        rows[i][counts_name] = result[i].self_count * this.props.period;
+        if(hasCalls)
+          rows[i]["Calls"] = result[i].self_calls;
       }
       this.setState({
           main_rows: rows,
@@ -106,10 +119,9 @@ var SelfView = React.createClass({
     }.bind(this));
   },
   render: function() {
-    var cumulative_url = "#/" + this.props.params.splat + "/cumulative"
+    var cumulative_url = "#/file/" + this.props.params.splat + "/cumulative"
     return (
       <div>
-        File: {this.props.params.splat} <a href="#/">Back to file directory.</a>
         <div><a href={cumulative_url}>Switch to cumulative view.</a></div>
         <Table className="table table-condensed" data={this.state.main_rows} />
       </div>
@@ -130,7 +142,7 @@ var ParentsView = React.createClass({
       var rows = [];
       for (var i = 0; i < result.length; ++i) {
         var r = result[i];
-        url = "#/" + props.file + "/rank/" + result[i].self_id;
+        url = "#/file/" + props.file + "/rank/" + result[i].self_id;
         rows[i] = {Callers: <a href={url}>{r.name}</a>,
                    "%": r.pct,
                    Counts: <span>{r.to_child_count} / {r.cumulative_count}</span>,
@@ -169,7 +181,7 @@ var ChildrenView = React.createClass({
       var rows = [];
       for (var i = 0; i < result.length; ++i) {
         var r = result[i];
-        url = "#/" + props.file + "/rank/" + r.self_id;
+        url = "#/file/" + props.file + "/rank/" + r.self_id;
         rows[i] = {Children: <a href={url}>{r.name}</a>,
                    "%": r.pct,
                    Counts: <span>{r.from_parent_count} / {r.cumulative_count}</span>,
@@ -250,7 +262,7 @@ var RankView = React.createClass({
     });
   },
   render: function() {
-    var cumulative_url = "#/" + this.props.params.splat + "/cumulative"
+    var cumulative_url = "#/file/" + this.props.params.splat + "/cumulative"
     return (
       <div>
         <div>
@@ -275,20 +287,58 @@ var App = React.createClass({
   }
 });
 
+var FileView = React.createClass({
+  getInitialState: function() {
+      return {
+        filename: [],
+        period: 1,
+        counter: "UNKNOWN",
+        counts: 0,
+        calls: 0,
+      };
+  },
+  refetchData: function(props) {
+    $.get("profile/" + props.params.splat,  function(result) {
+      if (!this.isMounted())
+        return;
+      console.log(result);
+      this.setState({
+        filename: props.params.splat,
+        period: result.tick_period || 1,
+        counter: result.counter,
+        counts: result.total_count,
+        calls: result.total_freqs
+      });
+    }.bind(this));
+  },
+  componentWillReceiveProps: function(nextProps) {
+    this.refetchData(nextProps);
+  },
+  componentDidMount: function() {
+    this.refetchData(this.props);
+  },
+  render: function() {
+    return (
+      <div class="container">
+        File: {this.props.params.splat} - Counter: {this.state.counter}<br/>
+        <a href="#/">Back to file directory.</a>
+        <RouteHandler counter={this.state.counter} period={this.state.period}/>
+      </div>
+    );
+  }
+});
 
 var routes = (
   <Route handler={App}>
     <Route handler={FileSelector} path="/"/>
-    <Route handler={CumulativeView} path="*/cumulative"/>
-    <Route handler={SelfView} path="*/self"/>
-    <Route handler={RankView} path="*/rank/:rank"/>
+    <Route handler={FileView} path="/file">
+      <Route handler={CumulativeView} path="*/cumulative"/>
+      <Route handler={SelfView} path="*/self"/>
+      <Route handler={RankView} path="*/rank/:rank"/>
+    </Route>
     <Route handler={NotFound} path="*"/>
   </Route>
 );
-
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById("content"));
-});
 
 Router.run(routes, Router.HashLocation, function (Handler) {
   React.render(<Handler/>, document.getElementById("content"));
