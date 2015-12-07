@@ -46,13 +46,24 @@ watcher
       var stmt = db.prepare(SUMMARY_QUERY);
       var result = db.all(SUMMARY_QUERY, {},
         function(err, rows){
-          if (err)
-          {
+          if (err) {
             log(err);
             return;
           }
-          if (redis_client)
-            redis_client.rpush("igprof_files", JSON.stringify({"filename": id, "info": rows[0]}));
+          var infos = rows;
+          var results2 = db.all(METADATA_QUERY, {}, function (err2, rows2) {
+            var payload = {"filename": id, "info": rows[0]};
+            if (err2) {
+              log(err2);
+              return;
+            }
+            log(rows2);
+            for (var mi = 0; mi < rows2.length; mi++)
+              payload[rows2[mi]["key"]] = rows2[mi]["value"];
+
+            if (redis_client)
+              redis_client.rpush("igprof_files", JSON.stringify(payload));
+          });
         }
       );
    })
@@ -154,6 +165,7 @@ var CHILDREN_QUERY = "SELECT c.self_id, sym.name,"                             +
                      " ORDER BY c.from_parent_count DESC;"                     
 
 var SUMMARY_QUERY = "SELECT * from summary;"
+var METADATA_QUERY = "SELECT * from metadata;"
 
 app.get(/\/profile\/(.*)\/self/, function(req, res) {
   var id = req.params[0];
