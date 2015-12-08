@@ -52,12 +52,15 @@ watcher
           }
           var infos = rows;
           var results2 = db.all(METADATA_QUERY, {}, function (err2, rows2) {
-            var payload = {"filename": id, "info": rows[0]};
+            var payload = {"filename": id, "info": rows[0], 
+                           "seconds": rows[0]["total_count"]*rows[0]["tick_period"],
+                           "bytes": rows[0]["total_count"],
+                           "calls": rows[0]["total_freq"]
+                          };
             if (err2) {
               log(err2);
               return;
             }
-            log(rows2);
             for (var mi = 0; mi < rows2.length; mi++)
               payload[rows2[mi]["key"]] = rows2[mi]["value"];
 
