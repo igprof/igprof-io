@@ -14,9 +14,10 @@ redis:
   expose: 
   - 6379
 logstash:
-  image: logstash
+  build: logstash-igprof
   links:
   - redis
-  volumes:
-  - "./logstash.conf:/logstash.conf"
-  command: "logstash -f /logstash.conf"
+  environment:
+    REDIS_HOST: redis
+    DEBUG: true
+  command: "/run.sh"
